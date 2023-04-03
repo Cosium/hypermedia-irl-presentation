@@ -4,13 +4,15 @@ import static java.util.Objects.requireNonNull;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.afford;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+import com.cos.devoxx.hypermediairl.core.invoice.Invoice;
+import com.cos.devoxx.hypermediairl.core.invoice.InvoiceRepository;
 import com.cos.devoxx.hypermediairl.core.item.Item;
 import com.cos.devoxx.hypermediairl.core.item.ItemRepository;
 import com.cos.devoxx.hypermediairl.core.spectacles.Spectacles;
 import com.cos.devoxx.hypermediairl.core.spectacles.SpectaclesRepository;
-import com.cos.devoxx.hypermediairl.http.SpectaclesACL;
 import com.cos.devoxx.hypermediairl.http.framework.VoidAffordance;
 import com.cos.devoxx.hypermediairl.http.framework.rfc_7240.ReturnPreference;
+import com.cos.devoxx.hypermediairl.http.invoice.InvoiceController;
 import com.cos.devoxx.hypermediairl.http.item.ItemController;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
@@ -24,8 +26,8 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilderFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,16 +45,19 @@ public class SpectaclesController {
   private final WebMvcLinkBuilderFactory linkBuilders;
   private final SpectaclesRepository repository;
   private final ItemRepository itemRepository;
+  private final InvoiceRepository invoiceRepository;
   private final SpectaclesACL spectaclesACL;
 
   public SpectaclesController(
       WebMvcLinkBuilderFactory linkBuilders,
       SpectaclesRepository repository,
       ItemRepository itemRepository,
+      InvoiceRepository invoiceRepository,
       SpectaclesACL spectaclesACL) {
     this.linkBuilders = requireNonNull(linkBuilders);
     this.repository = requireNonNull(repository);
     this.itemRepository = requireNonNull(itemRepository);
+    this.invoiceRepository = requireNonNull(invoiceRepository);
     this.spectaclesACL = requireNonNull(spectaclesACL);
   }
 
@@ -87,17 +92,22 @@ public class SpectaclesController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<?> findById(@PathVariable Long id) {
+  public ResponseEntity<?> findById(@PathVariable("id") Long id) {
+
     return ResponseEntity.of(
         this.repository.findById(id).map(Representation::new).map(Representation::toEntityModel));
   }
 
   @PutMapping("/{id}/frame")
   public ResponseEntity<?> updateFrame(
-      @PathVariable Long id, @RequestBody EditItemCommand command) {
+      @PathVariable("id") Long id, @RequestBody EditItemCommand command) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.notFound().build();
+    }
+
+    if (!spectaclesACL.canUpdate(spectacles)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     Item item = command.itemId().flatMap(itemRepository::findById).orElse(null);
@@ -110,21 +120,30 @@ public class SpectaclesController {
   }
 
   @DeleteMapping("/{id}/frame")
-  public ResponseEntity<?> deleteFrame(@PathVariable Long id) {
+  public ResponseEntity<?> deleteFrame(@PathVariable("id") Long id) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.notFound().build();
     }
+
+    if (!spectaclesACL.canUpdate(spectacles)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
     this.repository.save(spectacles.deleteFrame());
     return ResponseEntity.noContent().build();
   }
 
   @PutMapping("/{id}/right-lens")
   public ResponseEntity<?> updateRightLens(
-      @PathVariable Long id, @RequestBody EditItemCommand command) {
+      @PathVariable("id") Long id, @RequestBody EditItemCommand command) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.notFound().build();
+    }
+
+    if (!spectaclesACL.canUpdate(spectacles)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     Item item = command.itemId().flatMap(itemRepository::findById).orElse(null);
@@ -137,21 +156,30 @@ public class SpectaclesController {
   }
 
   @DeleteMapping("/{id}/right-lens")
-  public ResponseEntity<?> deleteRightLens(@PathVariable Long id) {
+  public ResponseEntity<?> deleteRightLens(@PathVariable("id") Long id) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.notFound().build();
     }
+
+    if (!spectaclesACL.canUpdate(spectacles)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
     this.repository.save(spectacles.deleteRightLens());
     return ResponseEntity.noContent().build();
   }
 
   @PutMapping("/{id}/left-lens")
   public ResponseEntity<?> updateLeftLens(
-      @PathVariable Long id, @RequestBody EditItemCommand command) {
+      @PathVariable("id") Long id, @RequestBody EditItemCommand command) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.notFound().build();
+    }
+
+    if (!spectaclesACL.canUpdate(spectacles)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
     Item item = command.itemId().flatMap(itemRepository::findById).orElse(null);
@@ -164,13 +192,30 @@ public class SpectaclesController {
   }
 
   @DeleteMapping("/{id}/left-lens")
-  public ResponseEntity<?> deleteLeftLens(@PathVariable Long id) {
+  public ResponseEntity<?> deleteLeftLens(@PathVariable("id") Long id) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.notFound().build();
     }
+
+    if (!spectaclesACL.canUpdate(spectacles)) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
     this.repository.save(spectacles.deleteLeftLens());
     return ResponseEntity.noContent().build();
+  }
+
+  @PostMapping("{id}/invoiced")
+  public ResponseEntity<?> invoice(@PathVariable("id") Long id) {
+    Spectacles spectacles = this.repository.findById(id).orElse(null);
+    if (spectacles == null) {
+      return ResponseEntity.badRequest().build();
+    }
+    Invoice invoice = spectacles.invoice(invoiceRepository);
+    return ResponseEntity.created(
+            linkBuilders.linkTo(methodOn(InvoiceController.class).findById(invoice.id())).toUri())
+        .build();
   }
 
   private record EditItemCommand(String itemUri) {
@@ -244,22 +289,25 @@ public class SpectaclesController {
     private LinkBuilder selfLinkBuilder() {
       List<Affordance> affordances = new ArrayList<>();
       affordances.add(VoidAffordance.create());
-      affordances.add(afford(methodOn(SpectaclesController.class).updateFrame(id, null)));
-      affordances.add(afford(methodOn(SpectaclesController.class).updateLeftLens(id, null)));
-      affordances.add(afford(methodOn(SpectaclesController.class).updateRightLens(id, null)));
+      if (spectaclesACL.canUpdate(spectacles)) {
 
-      if (spectacles.frame().isPresent()) {
-        affordances.add(afford(methodOn(SpectaclesController.class).deleteFrame(id)));
-      }
-      if (spectacles.rightLens().isPresent()) {
-        affordances.add(afford(methodOn(SpectaclesController.class).deleteRightLens(id)));
-      }
-      if (spectacles.leftLens().isPresent()) {
-        affordances.add(afford(methodOn(SpectaclesController.class).deleteLeftLens(id)));
+        affordances.add(afford(methodOn(SpectaclesController.class).updateFrame(id, null)));
+        affordances.add(afford(methodOn(SpectaclesController.class).updateLeftLens(id, null)));
+        affordances.add(afford(methodOn(SpectaclesController.class).updateRightLens(id, null)));
+
+        if (spectacles.frame().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteFrame(id)));
+        }
+        if (spectacles.rightLens().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteRightLens(id)));
+        }
+        if (spectacles.leftLens().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteLeftLens(id)));
+        }
       }
 
       if (spectacles.isEligibleForInvoicing()) {
-        // TODO
+        affordances.add(afford(methodOn(SpectaclesController.class).invoice(id)));
       }
 
       return linkBuilders
