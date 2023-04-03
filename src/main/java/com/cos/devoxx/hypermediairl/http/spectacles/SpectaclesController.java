@@ -93,7 +93,6 @@ public class SpectaclesController {
 
   @GetMapping("/{id}")
   public ResponseEntity<?> findById(@PathVariable("id") Long id) {
-
     return ResponseEntity.of(
         this.repository.findById(id).map(Representation::new).map(Representation::toEntityModel));
   }
