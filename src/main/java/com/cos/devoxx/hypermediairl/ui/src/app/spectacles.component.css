@@ -1,0 +1,16 @@
+.container {
+  flex: 0 0 100%;
+}
+
+.form-container {
+  display: flex;
+  gap: 10px;
+}
+
+.form-input {
+  width: 30%;
+}
+
+.form-button {
+  margin-left: 10px;
+}

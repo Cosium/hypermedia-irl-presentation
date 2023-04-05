@@ -1,0 +1,33 @@
+<div class="container">
+
+  <mat-card class="menu-group">
+    <mat-card-header>
+      <mat-card-title>Créer ses lunettes</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="form-container">
+      <mat-form-field appearance="fill" class="form-input">
+        <mat-label>Choisir une monture</mat-label>
+        <mat-select [(value)]="selectedFrame">
+          <mat-option *ngFor="let frame of items" [value]="frame">{{frame.data.label}} {{frame.data.price}}€</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="form-input">
+        <mat-label>Choisir un verre droit</mat-label>
+        <mat-select [(value)]="selectedRightLens">
+          <mat-option *ngFor="let rightLens of items" [value]="rightLens">{{rightLens.data.label}} {{rightLens.data.price}}€</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="form-input">
+        <mat-label>Choisir un verre gauche</mat-label>
+        <mat-select [(value)]="selectedLeftLens">
+          <mat-option *ngFor="let leftLens of items" [value]="leftLens">{{leftLens.data.label}} {{leftLens.data.price}}€</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card-content>
+    <mat-card-actions>
+      <button class="form-button" mat-flat-button [disabled]="!canInvoice()" (click)="invoice()" color="primary">
+        Générer facture
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

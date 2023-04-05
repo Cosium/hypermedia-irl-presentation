@@ -59,3 +59,4 @@ buildNumber.properties
 
 node_modules
 .flattened-pom.xml
+/dist/

@@ -4,12 +4,15 @@ import com.cos.devoxx.hypermediairl.core.invoice.Invoice;
 import com.cos.devoxx.hypermediairl.core.invoice.InvoiceRepository;
 import com.cos.devoxx.hypermediairl.core.item.Item;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import java.util.Optional;
 
 @Entity
 public class Spectacles {
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Id private long id;
   @ManyToOne private Item frame;
   @ManyToOne private Item rightLens;

@@ -14,6 +14,7 @@ import com.cos.devoxx.hypermediairl.http.framework.VoidAffordance;
 import com.cos.devoxx.hypermediairl.http.framework.rfc_7240.ReturnPreference;
 import com.cos.devoxx.hypermediairl.http.invoice.InvoiceController;
 import com.cos.devoxx.hypermediairl.http.item.ItemController;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +67,7 @@ public class SpectaclesController {
     Link selfLink =
         linkBuilders.linkTo(methodOn(SpectaclesController.class).list(null)).withSelfRel();
 
-    selfLink.andAffordances(
+    selfLink = selfLink.andAffordances(
         List.of(VoidAffordance.create(), afford(methodOn(SpectaclesController.class).create())));
 
     if (returnPreference == ReturnPreference.MINIMAL) {
@@ -217,7 +218,10 @@ public class SpectaclesController {
         .build();
   }
 
-  private record EditItemCommand(String itemUri) {
+  private record EditItemCommand(@JsonProperty("itemUri") String itemUri) {
+
+    @JsonCreator
+    private EditItemCommand {}
 
     Optional<Long> itemId() {
       return ControllerUriResolver.on(methodOn(ItemController.class).findById(null))
