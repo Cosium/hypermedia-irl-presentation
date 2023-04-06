@@ -33,17 +33,24 @@ public class ItemController {
   public ItemController(ItemRepository itemRepository, WebMvcLinkBuilderFactory linkBuilders) {
     this.itemRepository = requireNonNull(itemRepository);
     this.linkBuilders = requireNonNull(linkBuilders);
+    this.initializeDemoItems();
+  }
+
+  private void initializeDemoItems() {
+    this.itemRepository.save(new Item(120.50, "Ray-Ban Devoxx"));
+    this.itemRepository.save(new Item(220.75, "Verre droit Devoxx"));
+    this.itemRepository.save(new Item(220.75, "Verre gauche Devoxx"));
   }
 
   @GetMapping
   public ResponseEntity<?> list(ReturnPreference returnPreference) {
-
     Link selfLink =
         linkBuilders
             .linkTo(methodOn(ItemController.class).list(null))
             .withSelfRel()
-            .andAffordance(VoidAffordance.create())
-            .andAffordance(afford(methodOn(ItemController.class).create(null)));
+            .andAffordances(
+                List.of(
+                    VoidAffordance.create(), afford(methodOn(ItemController.class).create(null))));
 
     if (returnPreference == ReturnPreference.MINIMAL) {
       return ResponseEntity.ok(new RepresentationModel<>(selfLink));
@@ -54,7 +61,6 @@ public class ItemController {
             .map(Representation::new)
             .map(Representation::toEntityModel)
             .toList();
-
     return ResponseEntity.ok(CollectionModel.of(representations, selfLink));
   }
 

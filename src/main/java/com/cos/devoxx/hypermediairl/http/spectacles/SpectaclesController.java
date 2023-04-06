@@ -283,17 +283,38 @@ public class SpectaclesController {
     }
 
     EntityModel<Representation> toEntityModel() {
-      List<Link> links = new ArrayList<>();
-      links.add(selfLinkBuilder().withSelfRel());
+      List<Affordance> affordances = new ArrayList<>();
+      affordances.add(VoidAffordance.create());
+      if (spectaclesACL.canUpdate(spectacles)) {
+        affordances.add(afford(methodOn(SpectaclesController.class).updateFrame(id, null)));
+        affordances.add(afford(methodOn(SpectaclesController.class).updateLeftLens(id, null)));
+        affordances.add(afford(methodOn(SpectaclesController.class).updateRightLens(id, null)));
 
-      return EntityModel.of(this, links);
+        if (spectacles.frame().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteFrame(id)));
+        }
+        if (spectacles.rightLens().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteRightLens(id)));
+        }
+        if (spectacles.leftLens().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteLeftLens(id)));
+        }
+      }
+
+      if (spectacles.isEligibleForInvoicing()) {
+        affordances.add(afford(methodOn(SpectaclesController.class).invoice(id)));
+      }
+
+      return EntityModel.of(this, linkBuilders
+        .linkTo(methodOn(SpectaclesController.class).findById(id))
+        .addAffordances(affordances)
+        .withSelfRel());
     }
 
     private LinkBuilder selfLinkBuilder() {
       List<Affordance> affordances = new ArrayList<>();
       affordances.add(VoidAffordance.create());
       if (spectaclesACL.canUpdate(spectacles)) {
-
         affordances.add(afford(methodOn(SpectaclesController.class).updateFrame(id, null)));
         affordances.add(afford(methodOn(SpectaclesController.class).updateLeftLens(id, null)));
         affordances.add(afford(methodOn(SpectaclesController.class).updateRightLens(id, null)));

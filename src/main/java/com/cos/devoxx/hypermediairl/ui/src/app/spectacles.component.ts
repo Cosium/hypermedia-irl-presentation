@@ -49,14 +49,23 @@ export class SpectaclesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadItems();
+    //this.createSpectacles();
     this.create();
   }
 
   async create(): Promise<void> {
     const spectaclesResource = await this.ketting.follow<Spectacles>('spectacles');
     const savedResource = await spectaclesResource.postFollow({});
-    this.spectacles = await this.ketting.go(savedResource.uri).get();
+    this.spectacles = await savedResource.get();
+    console.log(this.spectacles);
   }
+
+  /*async createSpectacles(): Promise<void> {
+    const spectaclesResource = await this.ketting.follow<Spectacles>('spectacles');
+    const spectaclesState = await spectaclesResource.get({headers: {'Prefer': 'return=minimal'}});
+    console.log(spectaclesState);
+    spectaclesState.action('create').submit({});
+  }*/
 
   private async loadItems(): Promise<void> {
     const itemResources = await this.ketting.follow<Item>('items');
@@ -65,11 +74,17 @@ export class SpectaclesComponent implements OnInit {
   }
 
   async updateFrame(): Promise<void> {
-    if (!this.spectacles) {
+    if (!this.spectacles || !this._selectedFrame) {
       return;
     }
-    await this.spectacles.action('updateFrame').submit({itemUri: this._selectedFrame?.uri});
+    console.log(this.spectacles);
+    await this.spectacles.action('updateFrame').submit({itemUri: this._selectedFrame.uri});
     this.loadSpectacles();
+  }
+
+  async loadSpectacles(): Promise<void> {
+    this.spectacles = await this.ketting.go(this.spectacles?.uri).get();
+    console.log(this.spectacles);
   }
 
   async updateRightLens(): Promise<void> {
@@ -86,10 +101,6 @@ export class SpectaclesComponent implements OnInit {
     }
     await this.spectacles.action('updateLeftLens').submit({itemUri: this._selectedLeftLens?.uri});
     this.loadSpectacles();
-  }
-
-  async loadSpectacles(): Promise<void> {
-    this.spectacles = await this.ketting.go(this.spectacles?.uri).get();
   }
 
   canInvoice() {
