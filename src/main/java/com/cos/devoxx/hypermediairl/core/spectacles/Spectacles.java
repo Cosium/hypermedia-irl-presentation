@@ -18,7 +18,7 @@ public class Spectacles {
   @ManyToOne private Item rightLens;
   @ManyToOne private Item leftLens;
 
-  public Spectacles updateFrame(Item frame) {
+  public Spectacles selectFrame(Item frame) {
     this.frame = frame;
     return this;
   }
@@ -28,7 +28,7 @@ public class Spectacles {
     return this;
   }
 
-  public Spectacles updateRightLens(Item rightLens) {
+  public Spectacles selectRightLens(Item rightLens) {
     this.rightLens = rightLens;
     return this;
   }
@@ -38,7 +38,7 @@ public class Spectacles {
     return this;
   }
 
-  public Spectacles updateLeftLens(Item leftLens) {
+  public Spectacles selectLeftLens(Item leftLens) {
     this.leftLens = leftLens;
     return this;
   }

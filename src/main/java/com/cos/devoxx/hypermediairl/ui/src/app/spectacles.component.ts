@@ -60,12 +60,12 @@ export class SpectaclesComponent implements OnInit {
     console.log(this.spectacles);
   }
 
-  /*async createSpectacles(): Promise<void> {
+  async createSpectacles(): Promise<void> {
     const spectaclesResource = await this.ketting.follow<Spectacles>('spectacles');
-    const spectaclesState = await spectaclesResource.get({headers: {'Prefer': 'return=minimal'}});
-    console.log(spectaclesState);
-    spectaclesState.action('create').submit({});
-  }*/
+    const spectacles = await spectaclesResource.get({headers: {'Prefer': 'return=minimal'}});
+    console.log(spectacles);
+    spectacles.action('create').submit({});
+  }
 
   private async loadItems(): Promise<void> {
     const itemResources = await this.ketting.follow<Item>('items');
@@ -73,33 +73,36 @@ export class SpectaclesComponent implements OnInit {
     this.items = await new Resources(itemsState.followAll('content')).toStates();
   }
 
-  async updateFrame(): Promise<void> {
+  async selectFrame(): Promise<void> {
     if (!this.spectacles || !this._selectedFrame) {
       return;
     }
     console.log(this.spectacles);
-    await this.spectacles.action('updateFrame').submit({itemUri: this._selectedFrame.uri});
+    await this.spectacles.action('selectFrame').submit({itemUri: this._selectedFrame.uri});
     this.loadSpectacles();
   }
 
   async loadSpectacles(): Promise<void> {
-    this.spectacles = await this.ketting.go(this.spectacles?.uri).get();
+    if (!this.spectacles) {
+      return;
+    }
+    this.spectacles = await this.ketting.go(this.spectacles.uri).get();
     console.log(this.spectacles);
   }
 
-  async updateRightLens(): Promise<void> {
+  async selectRightLens(): Promise<void> {
     if (!this.spectacles) {
       return;
     }
-    await this.spectacles.action('updateRightLens').submit({itemUri: this._selectedRightLens?.uri});
+    await this.spectacles.action('selectRightLens').submit({itemUri: this._selectedRightLens?.uri});
     this.loadSpectacles();
   }
 
-  async updateLeftLens(): Promise<void> {
+  async selectLeftLens(): Promise<void> {
     if (!this.spectacles) {
       return;
     }
-    await this.spectacles.action('updateLeftLens').submit({itemUri: this._selectedLeftLens?.uri});
+    await this.spectacles.action('selectLeftLens').submit({itemUri: this._selectedLeftLens?.uri});
     this.loadSpectacles();
   }
 
@@ -114,21 +117,21 @@ export class SpectaclesComponent implements OnInit {
     if (!this.spectacles) {
       return;
     }
-    this.spectacles?.action('invoice').submit({});
+    this.spectacles.action('invoice').submit({});
   }
 
   set selectedFrame(value: State<Item>) {
     this._selectedFrame = value;
-    this.updateFrame();
+    this.selectFrame();
   }
 
   set selectedRightLens(value: State<Item>) {
     this._selectedRightLens = value;
-    this.updateRightLens();
+    this.selectRightLens();
   }
 
   set selectedLeftLens(value: State<Item>) {
     this._selectedLeftLens = value;
-    this.updateLeftLens();
+    this.selectLeftLens();
   }
 }
