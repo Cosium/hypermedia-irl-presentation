@@ -22,10 +22,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.springframework.hateoas.Affordance;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
-import org.springframework.hateoas.server.LinkBuilder;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilderFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -70,20 +70,17 @@ public class SpectaclesController {
             .linkTo(methodOn(SpectaclesController.class).list(null))
             .withSelfRel()
             .andAffordances(
-                List.of(
-                    VoidAffordance.create(),
-                    afford(methodOn(SpectaclesController.class).create())));
+              List.of(
+                VoidAffordance.create(),
+                afford(methodOn(SpectaclesController.class).create())));
 
     if (returnPreference == ReturnPreference.MINIMAL) {
       return ResponseEntity.ok(new RepresentationModel<>(selfLink));
     }
 
     List<EntityModel<Representation>> representations =
-        findAll()
-          .map(Representation::new)
-          .map(Representation::toEntityModel)
-          .toList();
-    return ResponseEntity.ok(representations);
+        findAll().map(Representation::new).map(Representation::toEntityModel).toList();
+    return ResponseEntity.ok(CollectionModel.of(representations, selfLink));
   }
 
   @PostMapping
@@ -211,7 +208,7 @@ public class SpectaclesController {
   }
 
   @PostMapping("{id}/invoiced")
-  public ResponseEntity<?> invoice(@PathVariable("id") Long id) {
+  public ResponseEntity<?> doInvoice(@PathVariable("id") Long id) {
     Spectacles spectacles = this.repository.findById(id).orElse(null);
     if (spectacles == null) {
       return ResponseEntity.badRequest().build();
@@ -239,19 +236,43 @@ public class SpectaclesController {
   }
 
   private class Representation {
+
+    // SpectaclesRepresentation.java
     private final long id;
     private final Spectacles spectacles;
-    private final String frameLabel;
-    private final Double framePrice;
-    private final String rightLensLabel;
-    private final Double rightLensPrice;
-    private final String leftLensLabel;
-    private final Double leftLensPrice;
+
+    public EntityModel<Representation> toEntityModel() {
+      List<Affordance> affordances = new ArrayList<>();
+      affordances.add(VoidAffordance.create());
+      if (spectaclesACL.canUpdate(spectacles)) {
+        affordances.add(afford(methodOn(SpectaclesController.class).selectFrame(id, null)));
+        affordances.add(afford(methodOn(SpectaclesController.class).selectRightLens(id, null)));
+        affordances.add(afford(methodOn(SpectaclesController.class).selectLeftLens(id, null)));
+        if (spectacles.frame().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteFrame(id)));
+        }
+        if (spectacles.rightLens().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteRightLens(id)));
+        }
+        if (spectacles.leftLens().isPresent()) {
+          affordances.add(afford(methodOn(SpectaclesController.class).deleteLeftLens(id)));
+        }
+      }
+
+      if (spectacles.isEligibleForInvoicing()) {
+        affordances.add(afford(methodOn(SpectaclesController.class).doInvoice(id)));
+      }
+      return EntityModel.of(
+          this,
+          linkBuilders
+              .linkTo(methodOn(SpectaclesController.class).findById(id))
+              .addAffordances(affordances)
+              .withSelfRel());
+    }
 
     private Representation(Spectacles spectacles) {
       this.id = spectacles.id();
       this.spectacles = spectacles;
-
       this.frameLabel = spectacles.frame().map(Item::label).orElse(null);
       this.framePrice = spectacles.frame().map(Item::price).orElse(null);
       this.rightLensLabel = spectacles.rightLens().map(Item::label).orElse(null);
@@ -259,6 +280,13 @@ public class SpectaclesController {
       this.leftLensLabel = spectacles.leftLens().map(Item::label).orElse(null);
       this.leftLensPrice = spectacles.leftLens().map(Item::price).orElse(null);
     }
+
+    private String frameLabel;
+    private String rightLensLabel;
+    private String leftLensLabel;
+    private Double framePrice;
+    private Double rightLensPrice;
+    private Double leftLensPrice;
 
     @JsonProperty
     public String getFrameLabel() {
@@ -288,65 +316,6 @@ public class SpectaclesController {
     @JsonProperty
     public Double getLeftLensPrice() {
       return leftLensPrice;
-    }
-
-    EntityModel<Representation> toEntityModel() {
-      List<Affordance> affordances = new ArrayList<>();
-      affordances.add(VoidAffordance.create());
-      if (spectaclesACL.canUpdate(spectacles)) {
-        affordances.add(afford(methodOn(SpectaclesController.class).selectFrame(id, null)));
-        affordances.add(afford(methodOn(SpectaclesController.class).selectLeftLens(id, null)));
-        affordances.add(afford(methodOn(SpectaclesController.class).selectRightLens(id, null)));
-
-        if (spectacles.frame().isPresent()) {
-          affordances.add(afford(methodOn(SpectaclesController.class).deleteFrame(id)));
-        }
-        if (spectacles.rightLens().isPresent()) {
-          affordances.add(afford(methodOn(SpectaclesController.class).deleteRightLens(id)));
-        }
-        if (spectacles.leftLens().isPresent()) {
-          affordances.add(afford(methodOn(SpectaclesController.class).deleteLeftLens(id)));
-        }
-      }
-
-      if (spectacles.isEligibleForInvoicing()) {
-        affordances.add(afford(methodOn(SpectaclesController.class).invoice(id)));
-      }
-
-      return EntityModel.of(
-          this,
-          linkBuilders
-              .linkTo(methodOn(SpectaclesController.class).findById(id))
-              .addAffordances(affordances)
-              .withSelfRel());
-    }
-
-    private LinkBuilder selfLinkBuilder() {
-      List<Affordance> affordances = new ArrayList<>();
-      affordances.add(VoidAffordance.create());
-      if (spectaclesACL.canUpdate(spectacles)) {
-        affordances.add(afford(methodOn(SpectaclesController.class).selectFrame(id, null)));
-        affordances.add(afford(methodOn(SpectaclesController.class).selectLeftLens(id, null)));
-        affordances.add(afford(methodOn(SpectaclesController.class).selectRightLens(id, null)));
-
-        if (spectacles.frame().isPresent()) {
-          affordances.add(afford(methodOn(SpectaclesController.class).deleteFrame(id)));
-        }
-        if (spectacles.rightLens().isPresent()) {
-          affordances.add(afford(methodOn(SpectaclesController.class).deleteRightLens(id)));
-        }
-        if (spectacles.leftLens().isPresent()) {
-          affordances.add(afford(methodOn(SpectaclesController.class).deleteLeftLens(id)));
-        }
-      }
-
-      if (spectacles.isEligibleForInvoicing()) {
-        affordances.add(afford(methodOn(SpectaclesController.class).invoice(id)));
-      }
-
-      return linkBuilders
-          .linkTo(methodOn(SpectaclesController.class).findById(id))
-          .addAffordances(affordances);
     }
   }
 }

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Component;
 public class SpectaclesACL {
 
   public boolean canUpdate(Spectacles spectacles) {
-    return spectacles.id() != 2;
+    return true;
   }
 }

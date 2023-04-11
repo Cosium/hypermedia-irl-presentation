@@ -49,7 +49,7 @@ export class SpectaclesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadItems();
-    //this.createSpectacles();
+    // this.createSpectacles();
     this.create();
   }
 
@@ -57,13 +57,11 @@ export class SpectaclesComponent implements OnInit {
     const spectaclesResource = await this.ketting.follow<Spectacles>('spectacles');
     const savedResource = await spectaclesResource.postFollow({});
     this.spectacles = await savedResource.get();
-    console.log(this.spectacles);
   }
 
   async createSpectacles(): Promise<void> {
     const spectaclesResource = await this.ketting.follow<Spectacles>('spectacles');
-    const spectacles = await spectaclesResource.get({headers: {'Prefer': 'return=minimal'}});
-    console.log(spectacles);
+    const spectacles = await spectaclesResource.get();
     spectacles.action('create').submit({});
   }
 
@@ -73,11 +71,11 @@ export class SpectaclesComponent implements OnInit {
     this.items = await new Resources(itemsState.followAll('content')).toStates();
   }
 
+  // spectacles: State<Spectacles>;
   async selectFrame(): Promise<void> {
     if (!this.spectacles || !this._selectedFrame) {
       return;
     }
-    console.log(this.spectacles);
     await this.spectacles.action('selectFrame').submit({itemUri: this._selectedFrame.uri});
     this.loadSpectacles();
   }
@@ -87,7 +85,6 @@ export class SpectaclesComponent implements OnInit {
       return;
     }
     this.spectacles = await this.ketting.go(this.spectacles.uri).get();
-    console.log(this.spectacles);
   }
 
   async selectRightLens(): Promise<void> {
@@ -110,14 +107,14 @@ export class SpectaclesComponent implements OnInit {
     if (!this.spectacles) {
       return false;
     }
-    return this.spectacles.hasAction('invoice');
+    return this.spectacles.hasAction('doInvoice');
   }
 
   async invoice(): Promise<void> {
     if (!this.spectacles) {
       return;
     }
-    this.spectacles.action('invoice').submit({});
+    this.spectacles.action('doInvoice').submit({});
   }
 
   set selectedFrame(value: State<Item>) {

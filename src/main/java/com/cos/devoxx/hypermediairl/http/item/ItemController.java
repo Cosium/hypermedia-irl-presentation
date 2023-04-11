@@ -37,7 +37,7 @@ public class ItemController {
   }
 
   private void initializeDemoItems() {
-    this.itemRepository.save(new Item(120.50, "Ray-Ban Devoxx"));
+    this.itemRepository.save(new Item(120.50, "Monture Devoxx"));
     this.itemRepository.save(new Item(220.75, "Verre droit Devoxx"));
     this.itemRepository.save(new Item(220.75, "Verre gauche Devoxx"));
   }

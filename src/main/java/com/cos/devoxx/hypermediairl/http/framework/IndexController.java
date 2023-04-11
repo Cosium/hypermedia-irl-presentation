@@ -28,9 +28,10 @@ public class IndexController {
     return ResponseEntity.ok(
         new RepresentationModel<>(
             List.of(
-                linkBuilders.linkTo(methodOn(ItemController.class).list(null)).withRel("items"),
-                linkBuilders
-                    .linkTo(methodOn(SpectaclesController.class).list(null))
+                linkBuilders.linkTo(methodOn(ItemController.class)
+                  .list(null)).withRel("items"),
+                linkBuilders.linkTo(methodOn(SpectaclesController.class)
+                  .list(null))
                     .withRel("spectacles"))));
   }
 }
